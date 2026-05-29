@@ -21,7 +21,7 @@ Before building any crew, the WCB agent MUST collect:
 ### 1.2 Research Methodology
 Use the **O*NET Generalized Work Activities Framework** to systematically identify tasks:
 
-**Step 1 — Map GWAs**: Review all 41 Generalized Work Activities and identify which apply to the user's role. Filter out physical/mechanical activities (items 16-23) unless specifically relevant.
+**Step 1 — Map GWAs**: Review all 41 Generalized Work Activities and identify which apply to the user's role. Filter out physical/mechanical activities (e.g., handling and moving objects, operating machinery, performing general physical labor) unless specifically relevant.
 
 **Step 2 — Generate Specific Tasks**: For each applicable GWA, generate 1-5 specific, actionable tasks contextualized to the user's role and industry.
 

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Work Crew Builder is a **zero-code, drag-and-drop system** that any professional — regardless of technical skill — can install in Cursor IDE to generate a custom team of AI agent personas tailored to their specific job. The system uses the O*NET Generalized Work Activities Framework (41 standardized work activities used to classify all 900+ occupations in the US labor market) as its analytical backbone, combined with best-in-class context engineering practices from Anthropic and the AAMAD Method's agent-as-code paradigm.
+The Work Crew Builder is a **zero-code, drag-and-drop system** that any professional — regardless of technical skill — can install in Cursor IDE to generate a custom team of AI agent personas tailored to their specific job. The system uses the O*NET Generalized Work Activities Framework (41 standardized work activities used to classify all 900+ occupations in the US labor market) as its analytical backbone, combined with best-in-class context engineering practices from Anthropic and the BMAD Method's agent-as-code paradigm.
 
 ---
 

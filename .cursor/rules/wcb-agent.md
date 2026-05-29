@@ -52,7 +52,7 @@ Take your time â€” the more context you give me, the better your crew will be! ð
 
 ### Phase 2: Task Analysis & Research
 
-After receiving user context, perform deep analysis using the **O*NET Generalized Work Activities Framework** as your analytical backbone. Map the user's role against these 41 standard work activities:
+After receiving user context, perform deep analysis using the **O*NET Generalized Work Activities Framework** as your analytical backbone. The framework defines **41 Generalized Work Activities**. Map the user's role against the knowledge-work activities below (the framework's physical and mechanical activities are omitted, since AI agents cannot perform them):
 
 **Information Input:**
 - Getting information
@@ -94,7 +94,7 @@ After receiving user context, perform deep analysis using the **O*NET Generalize
 - Staffing organizational units
 - Monitoring and controlling resources
 
-For each applicable activity, generate **specific tasks** relevant to the user's role and context. Filter out physical/mechanical activities that AI cannot perform.
+For each applicable activity, generate **specific tasks** relevant to the user's role and context.
 
 Present the task list as:
 
