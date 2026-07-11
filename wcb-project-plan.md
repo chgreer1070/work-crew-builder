@@ -45,9 +45,9 @@ work-crew-builder/
 
 The builder workflow belongs in the Skill. The public documentation explains how to install and use it without repeating its detailed internal instructions.
 
-## Generated workspace architecture
+## Resulting workspace architecture
 
-After the user approves a crew, the builder creates this structure:
+After installation and crew approval, the workspace has this combined structure:
 
 ```text
 My-Work-Crew/
@@ -72,11 +72,13 @@ My-Work-Crew/
     └── final/
 ```
 
+All four standard `project-context/` subfolders are required in every generated crew workspace.
+
 ### Generated artifact contract
 
 | Artifact | Purpose |
 |---|---|
-| `.cursor/agents/<name>.md` | One project-level custom subagent with a focused role, clear delegation description, assigned tasks, autonomy behavior, and escalation triggers |
+| `.cursor/agents/<name>.md` | One rostered, project-level custom subagent with a focused role, clear delegation description, assigned tasks, autonomy behavior, and escalation triggers |
 | `AGENTS.md` | Shared user context, priorities, standing instructions, constraints, and crew roster |
 | `STATUS.md` | Task progress, handoffs, completed work, and questions for the user |
 | `MYCREW.md` | Plain-language crew directory, task map, and usage guide |
@@ -86,6 +88,8 @@ My-Work-Crew/
 | `project-context/final/` | Finished, user-facing deliverables |
 
 Crew members are invoked explicitly with `/name`. Cursor may also delegate to them automatically from a normal request, using each subagent's description to choose the right specialist.
+
+The managed crew is the roster declared in `AGENTS.md`. Existing custom subagents that are not rostered are outside the managed crew; the builder reports and preserves them unless the user explicitly approves bringing them into the crew.
 
 ## User journey
 
@@ -115,7 +119,7 @@ The user's domain knowledge remains authoritative. O*NET is a structured startin
 ## Crew design
 
 - Prefer the smallest crew that gives each role a distinct responsibility.
-- Assign each approved task to one owner.
+- Assign each approved task to exactly one owner; keep **Stays with you** tasks visible and owned by the Human.
 - Give every subagent a specific description so Cursor can delegate reliably.
 - Configure LOW, MEDIUM, or HIGH autonomy in terms the user can understand.
 - Make escalation triggers concrete, especially for external communication, sensitive data, financial decisions, and irreversible actions.
@@ -123,7 +127,9 @@ The user's domain knowledge remains authoritative. O*NET is a structured startin
 
 ## File-based context and coordination
 
-`AGENTS.md` and `STATUS.md` preserve shared state across chats and delegated subagent runs. This makes priorities, dependencies, and decisions inspectable by the user instead of hiding them in conversation history.
+`AGENTS.md` is the source of truth for durable user context, priorities, standing instructions, tasks, roster, constraints, and active autonomy. Durable configuration changes go through `/crew-builder` so the agent definitions, roster, task map, and user guide remain reconciled.
+
+`STATUS.md` is the source of truth for mutable task and event state. Ordinary progress, handoffs, blockers, notifications, and completion history remain STATUS-owned rather than becoming crew configuration.
 
 `project-context/` serves a different purpose: it stores the source material and substantial artifacts used or produced by the crew. Crew members inspect only relevant folders, place new work in the matching subfolder, and link important outputs from `STATUS.md`.
 
@@ -139,6 +145,8 @@ This separation keeps the workspace root readable:
 
 For that reason, the package is best installed in a dedicated crew workspace. Installing it in an unrelated project would also apply the SOP there.
 
+After crew generation, relocation must keep the entire dedicated workspace together: `.cursor/`, `AGENTS.md`, `STATUS.md`, `MYCREW.md`, and `project-context/`. Moving only the installed package would separate the runtime policy from the crew's configuration, history, and outputs.
+
 ## Safety and consistency requirements
 
 - Preview planned file changes and receive user approval before modifying the crew.
@@ -146,6 +154,7 @@ For that reason, the package is best installed in a dedicated crew workspace. In
 - Never overwrite user-authored context without showing what will change.
 - Keep the roster, task ownership, invocation names, and generated files synchronized.
 - Preserve existing source material and crew outputs unless the user explicitly approves their removal.
+- Preserve unrelated custom subagents outside the managed roster.
 - Use `/crew-builder` as the single lifecycle entrypoint.
 
 ## Cursor integration

@@ -63,7 +63,7 @@ Open Cursor Agent chat and enter:
 /crew-builder Build a crew for my role
 ```
 
-The builder asks about your work, maps suitable tasks using the O*NET Generalized Work Activities framework, and helps you choose how independently the crew may act. It shows you the proposed crew and file changes before asking permission to create them.
+The builder asks about your work, reviews all 41 O*NET Generalized Work Activities, and classifies each real task as **Crew can do**, **Crew drafts—you decide**, or **Stays with you**. Human-owned duties remain visible. The builder then helps you choose how independently the crew may act and shows the proposed crew and file changes before asking permission to create them.
 
 ### 4. Review the result
 
@@ -92,24 +92,25 @@ My-Work-Crew/
     └── final/
 ```
 
-Crew member names will be chosen for your role. Each file in `.cursor/agents/` defines a Cursor custom subagent.
+All four standard `project-context/` subfolders are required. Crew member names will be chosen for your role, and each managed crew member has a custom-subagent file in `.cursor/agents/`. Existing custom subagents that are not listed in the `AGENTS.md` roster remain outside the managed crew and are left untouched.
 
 ## Work with your crew
 
 - Invoke a crew member directly: `/riley Draft this week's status update`.
 - Or describe the task normally and let Cursor delegate it to the appropriate subagent.
 - Put useful briefs, examples, and source documents in `project-context/`.
-- Check `STATUS.md` for progress and questions.
-- Edit `AGENTS.md` when priorities or shared context change.
-- Use `/crew-builder` to add, remove, or modify crew members or to change autonomy.
+- Check `STATUS.md`, the source of truth for ordinary task and event state, for progress and questions.
+- Use `/crew-builder` for durable changes to context, priorities, standing instructions, tasks, roster, or autonomy. The builder reconciles those changes across `AGENTS.md` and the related crew files.
 
 ## Troubleshooting
 
 ### `/crew-builder` does not appear
 
 - Confirm the file is at `.cursor/skills/crew-builder/SKILL.md`, with no extra folder level.
-- Confirm the accompanying `references/` folder was copied.
-- Reopen the workspace, then start a new Agent chat and type `/crew-builder`.
+- Confirm `SKILL.md` begins with valid YAML frontmatter containing `name: crew-builder` and a non-empty `description`.
+- Reload the workspace window, or close and reopen the folder, so Cursor discovers the Skill again. Then start a new Agent chat and type `/crew-builder`.
+
+A missing `references/` folder affects execution after invocation; it does not determine whether `/crew-builder` appears in the slash-command list. If the command appears but cannot complete its workflow, confirm the whole `references/` folder was copied.
 
 ### A crew member does not appear
 
@@ -129,7 +130,7 @@ Rebuild previews every proposed change and asks for approval before modifying fi
 
 ### The crew rules affect unrelated work
 
-The SOP is intentionally workspace-wide. Move the package to a dedicated crew workspace and use that workspace for crew tasks.
+The SOP is intentionally workspace-wide. After a crew exists, do not move only the installed package or `.cursor/` folder. Move or open the entire dedicated crew workspace as one unit, including `.cursor/`, `AGENTS.md`, `STATUS.md`, `MYCREW.md`, and `project-context/`. This keeps crew configuration, task history, and outputs together.
 
 ## File reference
 
