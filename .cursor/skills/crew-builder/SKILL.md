@@ -1,7 +1,6 @@
 ---
+name: crew-builder
 description: Rules the WCB agent follows to build a crew of AI agent personas. Activated when building or modifying a work crew.
-globs: 
-alwaysApply: false
 ---
 
 # Crew Builder Rules
