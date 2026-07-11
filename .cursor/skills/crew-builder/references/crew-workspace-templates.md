@@ -53,6 +53,11 @@ ownership; report other custom subagents and leave them untouched.
   instead of leaving the field blank.
 - Preserve stable Task IDs. Rewording, reprioritizing, or reassigning a task
   updates its existing ID; only genuinely new work receives a new ID.
+- For every task, persist integer frequency, impact, and time-burden scores from
+  `0` to `3`. Sum them to calculate priority: `7–9` is `Critical`, `4–6` is
+  `Important`, and `0–3` is `Optional`. Persist both calculated and approved
+  priority. If the user overrides a score or priority, persist the override and
+  reason; otherwise record `None`.
 
 ## AGENTS.md template
 
@@ -78,6 +83,10 @@ explicitly selects MEDIUM or HIGH.
   persona.
 - Task IDs remain stable when task wording, priority, frequency, or owner
   changes.
+- Every task record keeps its frequency/cadence plus frequency, impact, and
+  time-burden scores. Scores are integers from `0` to `3`; calculated priority
+  follows the score sum, while approved priority and any override reason
+  preserve the user's decision.
 - Every agent slug matches
   `^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`: it starts with a lowercase letter and
   otherwise uses lowercase letters, digits, and single hyphens.
@@ -117,17 +126,50 @@ do not replace the active enum or alter crew-sop globally.
 
 ## Stable Task Map
 
-| Task ID | Task | Evidence/source | AI involvement class | Sole owner | Contributors | Tools/access | Approver | Sensitive boundary | Priority | Frequency | Definition of done | Primary output |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| {{stable-task-id}} | {{approved-task}} | {{evidence-or-source}} | {{crew-can-do-or-crew-drafts-you-decide-or-stays-with-you}} | {{agent-slug-or-Human}} | {{contributors-or-None}} | {{verified-tools-access-and-gaps}} | {{approver-or-Not-required}} | {{sensitive-boundary}} | {{priority}} | {{frequency}} | {{acceptance-criteria}} | {{output-path-or-format}} |
+Use one compact record block per active Task ID so scoring, ownership, and
+delivery metadata remain readable.
+
+### {{stable-task-id}} — {{approved-task}}
+
+| Identity, evidence, and ownership | Approved value |
+|---|---|
+| Task ID | {{stable-task-id}} |
+| Task | {{approved-task}} |
+| Evidence/source | {{evidence-or-source}} |
+| AI involvement class | {{crew-can-do-or-crew-drafts-you-decide-or-stays-with-you}} |
+| Sole owner | {{agent-slug-or-Human}} |
+| Contributors | {{contributors-or-None}} |
+| Tools/access | {{verified-tools-access-and-gaps}} |
+| Approver | {{approver-or-Not-required}} |
+| Sensitive boundary | {{sensitive-boundary}} |
+
+| Scoring and delivery | Approved value |
+|---|---|
+| Frequency/cadence | {{frequency-or-seasonal-period}} |
+| Frequency score (0–3) | {{frequency-score}} |
+| Impact score (0–3) | {{impact-score}} |
+| Time-burden score (0–3) | {{time-burden-score}} |
+| Calculated score total (0–9) | {{calculated-score-total}} |
+| Calculated priority | {{Critical-or-Important-or-Optional}} |
+| Approved priority | {{approved-priority}} |
+| Score or priority override/reason | {{override-and-reason-or-None}} |
+| Definition of done | {{acceptance-criteria}} |
+| Primary output | {{output-path-or-format}} |
 
 `Sole owner` is exactly one rostered agent slug or the literal `Human`.
 `Human` is a valid owner for work that stays with the user; it is not an agent
 slug, roster entry, invocation, or persona. Contributors never become implicit
 owners. Use exactly one approved AI involvement class: `Crew can do`,
 `Crew drafts—you decide`, or `Stays with you`. Preserve every approved field
-in this canonical map; do not omit evidence, access gaps, approvals, or
+in this canonical map; do not omit evidence, scores, cadence or seasonal
+period, priority calculation, override reason, access gaps, approvals, or
 sensitive boundaries from the persisted register.
+
+The calculated score total is the sum of the three persisted scores. Calculated
+priority is `Critical` for `7–9`, `Important` for `4–6`, and `Optional` for
+`0–3`. Approved priority is the user's final approved value. Record `None` for
+the override field only when no score or priority was overridden; otherwise
+record what changed and the user's reason.
 
 ## Standing Instructions
 
@@ -296,10 +338,10 @@ subagents in the project are not silently adopted into the crew.
 
 The Owner / invocation value is either a crew member's `/slug` or `Human`.
 
-| Task ID | Task | Owner / invocation | AI involvement class | Priority | Frequency | Primary output |
+| Task ID | Task | Owner / invocation | AI involvement class | Approved priority | Frequency/cadence | Primary output |
 |---|---|---|---|---|---|---|
-| {{agent-owned-task-id}} | {{agent-owned-task}} | `/{{agent-slug}}` | {{crew-can-do-or-crew-drafts-you-decide}} | {{priority}} | {{frequency}} | {{output}} |
-| {{human-owned-task-id}} | {{human-owned-task}} | Human | Stays with you | {{priority}} | {{frequency}} | {{output}} |
+| {{agent-owned-task-id}} | {{agent-owned-task}} | `/{{agent-slug}}` | {{crew-can-do-or-crew-drafts-you-decide}} | {{approved-priority}} | {{frequency-or-seasonal-period}} | {{output}} |
+| {{human-owned-task-id}} | {{human-owned-task}} | Human | Stays with you | {{approved-priority}} | {{frequency-or-seasonal-period}} | {{output}} |
 
 ## Human-Owned Work
 
@@ -473,10 +515,17 @@ Do not hand off until all checks pass:
    `^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`; every managed persona has fixed
    `model: inherit`.
 6. **Canonical tasks:** every active Task ID has one complete Stable Task Map
-   row with evidence/source, one approved AI involvement class, one sole owner,
-   Contributors, tools/access, approver, sensitive boundary, priority,
-   frequency, definition of done, and primary output. The sole owner is one
-   rostered slug or `Human`, and `Human` is never required in the roster.
+   record with evidence/source, one approved AI involvement class, one sole
+   owner, Contributors, tools/access, approver, sensitive boundary,
+   frequency/cadence, three scores, calculated score total, calculated and
+   approved priority, override/reason, definition of done, and primary output.
+   The sole owner is one rostered slug or `Human`, and `Human` is never required
+   in the roster. Assert each score is an integer from `0` to `3`, the total is
+   their sum, and calculated priority is `Critical` for `7–9`, `Important` for
+   `4–6`, or `Optional` for `0–3`. Approved priority must be one of those three
+   values. If the user overrode any proposed score, identify that score and the
+   reason. If approved priority differs from calculated priority, identify the
+   priority override and reason. Require `None` only when neither occurred.
 7. **Persona task projection:** every agent-owned Task ID appears exactly once
    in its sole owner's managed persona and no other persona. Every Human-owned
    Task ID appears in no persona.
@@ -489,8 +538,9 @@ Do not hand off until all checks pass:
    changed only owned active rows; an approved `/crew-builder` operation
    changed only the cross-agent active ownership fields in its exact preview.
 10. **MYCREW accuracy:** autonomy, crew-managed roster, agent and Human-owned
-    tasks, `/slug` or `Human` ownership presentation, counts, and inventory
-    agree with AGENTS.md. Unrelated custom subagents are not forced into it.
+    tasks, `/slug` or `Human` ownership presentation, approved priorities,
+    frequency/cadence, counts, and inventory agree with AGENTS.md. Unrelated
+    custom subagents are not forced into it.
 11. **Runtime policy:** crew personas and workspace guides point to
     `.cursor/rules/crew-sop.mdc` for behavior rather than copying policy blocks.
 12. **Project context:** after bootstrap or rebuild, all four standard

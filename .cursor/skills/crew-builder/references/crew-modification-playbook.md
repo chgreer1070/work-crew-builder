@@ -75,9 +75,9 @@ the preview; it cannot inherit the crew-file allowlist.
 
 For every candidate path:
 
-1. Inspect the path and each existing parent without following symlinks. Record
-   available path identity, type, content hash or version, and regular-file link
-   count.
+1. Immediately before each read, inspect the path and each existing parent
+   without following symlinks. Record and verify available path identity, type,
+   content hash or version, and regular-file link count.
 2. Confirm its canonical location remains under the workspace root.
 3. Stop if any component is a symlink, a regular file has multiple links where
    link-count metadata is available, or a path has an unexpected type.
@@ -86,6 +86,16 @@ For every candidate path:
 5. Stop when an affected source, destination, or collision has unknown
    ownership. A file is crew-managed only when `AGENTS.md` names it or the user
    explicitly adopts it; filesystem ownership alone is not sufficient.
+6. After every read, immediately recheck path identity, type, and content hash
+   or version. Discard the read result on drift; do not reason from bytes that
+   can no longer be bound to the verified path state.
+
+This file-based workflow assumes a locally trusted workspace that is not under
+active hostile filesystem mutation. It handles ordinary concurrent edits with
+conditional checks, but it is not a defense against an adversary racing every
+check. If hostile mutation is suspected or the local workspace is not trusted,
+stop rather than claiming atomic or containment safety the available tools
+cannot establish.
 
 On a collision or unknown affected ownership, stop mutation, show the evidence,
 ask the user to choose a safe disposition, rerun preflight, and issue a new
@@ -107,6 +117,11 @@ referenced by the proposed change.
   remain limited to their own task-owned current-state rows.
 - Preserve stable task identifiers through rewording, reprioritization,
   reassignment, and rebuild; assign a new identifier only to genuinely new work.
+- Every approved task has exactly one sole owner: one crew-managed agent slug or
+  the literal `Human`. Agent-owned tasks project into exactly their owner's
+  persona. Human-owned `Stays with you` tasks remain in `AGENTS.md` and
+  `MYCREW.md` and appear in no persona. Contributors are separate metadata and
+  never become owners or cause persona task projection.
 - Preserve user-authored sections in `AGENTS.md`, `MYCREW.md`, and agent files.
   If managed boundaries cannot be identified safely, stop for user direction.
 - Archive retired files byte-for-byte. Record provenance in the handoff rather
@@ -159,7 +174,8 @@ baseline exists, classify it as user-modified.
 Derive and compare these state maps:
 
 1. agent identifier → definition path;
-2. task identifier → exactly one active owner;
+2. task identifier → exactly one sole owner (`Human` or one managed-agent slug)
+   plus a separate Contributors set;
 3. active `STATUS.md` item → current owner;
 4. roster and task projections in `AGENTS.md` and `MYCREW.md`;
 5. canonical autonomy declaration in `AGENTS.md`.
@@ -229,13 +245,16 @@ After approval and drift verification:
    changed identities, and regular files with multiple links when that metadata
    is available. For an absent target, revalidate every existing parent and
    confirm the target is still absent.
-3. Use hash/version-conditional updates. For new destinations, require the path
-   to remain absent and use no-clobber creation where available. On drift, stop;
-   retry only after read-only merge, a revised exact preview, and new approval.
+3. Use hash/version-conditional updates. Every create, including a move/archive
+   destination, requires exclusive/no-clobber semantics that fail if the path
+   exists. If the available tool cannot guarantee that property, stop the
+   create. On drift, retry only after read-only merge, a revised exact preview,
+   and new approval.
 4. Prefer no-follow access and same-directory atomic replacement primitives
-   where available. If an equivalent containment and identity check cannot be
-   established, abort any destructive or overwrite action rather than weakening
-   safety; no particular platform-specific primitive is mandatory.
+   where available. The required properties are verified containment and
+   identity plus fail-closed destructive/overwrite behavior, not use of a named
+   platform syscall. If those properties cannot be established, abort rather
+   than weakening safety.
 5. Make operation-specific dependency changes first. In particular, reassign
    owned and in-progress work before retiring an agent.
 6. Edit managed fields minimally; do not regenerate whole coordination files.
@@ -258,7 +277,9 @@ Reconciliation checks and aligns only the approved operation:
 
 - `AGENTS.md` is the canonical roster and task-owner map.
 - `MYCREW.md` is a matching human-readable projection, not a second authority.
-- Agent task lists agree with canonical ownership.
+- Every agent-owned task appears exactly in its sole owner's managed persona and
+  no other persona. Human-owned tasks remain in `AGENTS.md` and `MYCREW.md` and
+  appear in no persona; Contributors remain separate from ownership.
 - Builder-approved active `STATUS.md` ownership fields name current owners;
   historical and unrelated active rows retain their original names and text.
 - Retired agents have no active roster, task, pending, or in-progress
@@ -347,15 +368,20 @@ preview.
 ### 7.5 Reassign a Task
 
 1. Identify the task by stable identifier and confirm its single current owner.
-2. Select one valid target and check the current builder capacity and
-   responsibility constraints.
-3. Preview removal from the source, addition to the target, canonical
-   `AGENTS.md` ownership, `MYCREW.md`, and active `STATUS.md` owner changes.
+2. Select one valid sole owner—one managed-agent slug or `Human`—and check any
+   applicable builder capacity and responsibility constraints. Keep
+   Contributors separate.
+3. Preview canonical `AGENTS.md` ownership, `MYCREW.md`, active `STATUS.md`
+   owner changes, removal from the former agent persona when applicable, and
+   addition only to a managed-agent target persona. A `Human` target has no
+   persona projection. Preview Contributors as a separate field.
 4. Apply source and target definitions plus canonical mappings as one approved
-   change set.
+   change set. If the new owner is `Human`, remove the task from every persona
+   while retaining it in `AGENTS.md` and `MYCREW.md`.
 5. Preserve completed and historical rows under their original owner.
 
-The result must contain exactly one active owner—never zero and never two.
+The result must contain exactly one sole owner—never zero and never two.
+Contributor assignments do not satisfy or duplicate ownership.
 
 ### 7.6 Change Autonomy
 
@@ -431,19 +457,24 @@ the single-autonomy check below. Run checks in order and record `PASS` or `FAIL`
 1. The actual ordered mutation rows—including action IDs, row actions, and
    paths—exactly equal the approved manifest.
 2. Every mutation path is normalized, workspace-relative, and allowlisted.
-3. Immediately before every mutation, identity and containment were rechecked;
-   no path component was a symlink or unexpected type, and no regular file had
-   multiple links when link-count metadata was available.
+3. Identity, type, hash or version, and containment were checked immediately
+   before each access and rechecked after every read; no path component was a
+   symlink or unexpected type, and no regular file had multiple links when
+   link-count metadata was available.
 4. Every hash/version conditional matched at write time; drift caused an abort,
    not an overwrite.
-5. Every resulting hash/version and type matches the approved rendered state.
+5. Every create used exclusive/no-clobber semantics, and every resulting
+   hash/version and type matches the approved rendered state.
 6. Every crew-managed custom-subagent file is under `.cursor/agents/`, parses,
    satisfies the current metadata contract, and uses a slug matching
    `^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`.
 7. `AGENTS.md` names the complete crew-managed agent set. Unknown unrelated
    custom subagents are reported, excluded from equality, and untouched.
-8. Every approved task identifier has exactly one active owner and appears in
-   the matching managed-agent task list.
+8. Every approved task identifier has exactly one sole owner. An agent-owned
+   task appears exactly once in its matching managed persona and in no other
+   persona. A `Human`-owned task remains in `AGENTS.md` and `MYCREW.md` and
+   appears in no persona. Contributors remain separate and do not count as
+   owners or persona projection.
 9. Every active pending or in-progress row has an active owner; builder changes
    are limited to approved affected ownership fields and required appended
    events.
@@ -457,8 +488,9 @@ the single-autonomy check below. Run checks in order and record `PASS` or `FAIL`
     value; no agent file defines a competing active value.
 15. The before and after hashes of `.cursor/rules/crew-sop.mdc` match for an
     autonomy change or ordinary crew-state mutation.
-16. `AGENTS.md`, managed-agent task lists, active `STATUS.md` ownership, and
-    `MYCREW.md` agree.
+16. `AGENTS.md` and `MYCREW.md` agree on every task's sole owner and
+    Contributors; managed personas project only their owner's agent-owned tasks,
+    and active `STATUS.md` ownership agrees.
 17. `project-context/research/`, `project-context/plans/`,
     `project-context/drafts/`, and `project-context/final/` exist as real
     directories inside the workspace.
