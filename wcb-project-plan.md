@@ -1,131 +1,158 @@
-# 🏗️ Work Crew Builder (WCB) — Complete Project Plan & Architecture
+# Work Crew Builder project plan and architecture
 
-## Executive Summary
+## Purpose
 
-The Work Crew Builder is a **zero-code, drag-and-drop system** that any professional — regardless of technical skill — can install in Cursor IDE to generate a custom team of AI agent personas tailored to their specific job. The system uses the O*NET Generalized Work Activities Framework (41 standardized work activities used to classify all 900+ occupations in the US labor market) as its analytical backbone, combined with best-in-class context engineering practices from Anthropic and the AAMAD Method's agent-as-code paradigm.
+Work Crew Builder is a zero-code workspace package for Cursor. It helps a nontechnical professional describe their job, review an AI-suitable task map, and create a focused crew of custom subagents.
 
----
+There is no application to build, package manager to run, or plugin manifest to install. The user copies the whole `.cursor` folder into a workspace and starts with `/crew-builder`.
 
-## System Architecture
+## Design goals
 
-### File Structure (Post-Installation)
+- Keep installation and operation understandable without technical knowledge.
+- Use one entrypoint, `/crew-builder`, for initial setup and later changes.
+- Generate a small set of focused Cursor custom subagents.
+- Ask the user to approve the task map, crew design, and file changes.
+- Keep shared knowledge and durable outputs visible as ordinary files.
+- Load detailed builder references only when needed.
 
-```
-My-Work-Crew/                     ← User's workspace
+## Shipped repository architecture
+
+```text
+work-crew-builder/
 ├── .cursor/
+│   ├── skills/
+│   │   └── crew-builder/
+│   │       ├── SKILL.md
+│   │       └── references/
 │   └── rules/
-│       ├── wcb-agent.md          ← The Work Crew Builder agent persona
-│       ├── crew-builder.mdc      ← Rules for building crews
-│       ├── crew-sop.mdc          ← Operating rules for the crew (alwaysApply: true)
-│       ├── riley.md              ← [Generated] Agent persona #1
-│       ├── morgan.md             ← [Generated] Agent persona #2
-│       ├── alex.md               ← [Generated] Agent persona #3
-│       └── ...                   ← [Generated] Additional agents
-├── AGENTS.md                     ← [Generated] Shared crew memory
-├── STATUS.md                     ← [Generated] Task status & notification board
-├── MYCREW.md                     ← [Generated] Crew summary & user guide
-├── project-context/              ← Shared knowledge & crew outputs
-│   ├── plans/                    ← Strategy & planning artifacts
-│   ├── research/                 ← Research & analysis
-│   ├── drafts/                   ← Writing & drafts
-│   └── final/                    ← Final, user-facing deliverables
-└── INSTALL-GUIDE.md              ← Installation instructions
+│       └── crew-sop.mdc
+├── INSTALL-GUIDE.md
+├── README.md
+├── project-context/
+│   └── .gitkeep
+└── wcb-project-plan.md
 ```
 
-### Artifact Inventory
+| Component | Responsibility |
+|---|---|
+| `.cursor/skills/crew-builder/SKILL.md` | Canonical discovery, design, preview, generation, and modification workflow |
+| `.cursor/skills/crew-builder/references/` | O*NET guidance and supporting templates loaded by the skill when needed |
+| `.cursor/rules/crew-sop.mdc` | Operating and coordination rules applied throughout the workspace |
+| `README.md` | Overview, quick start, and repository inventory |
+| `INSTALL-GUIDE.md` | Drag-and-drop setup and troubleshooting |
+| `wcb-project-plan.md` | Architecture, contracts, and design rationale |
+| `project-context/.gitkeep` | Preserves the repository's context folder |
 
-| # | Artifact | Format | Purpose |
-|---|----------|--------|---------|
-| 1 | `wcb-agent.md` | Markdown persona | The builder agent — "Nova" — invoked via `@wcb-agent.md` |
-| 2 | `crew-builder.mdc` | MDC rule file | Rules Nova follows to design & generate crews |
-| 3 | `crew-sop.mdc` | MDC rule file | Operating procedures all crew agents follow |
-| 4 | `INSTALL-GUIDE.md` | Markdown | Non-technical installation walkthrough |
-| 5 | `project-context/` | Folder | Primary long-term knowledge store; user drops briefs/specs here; crew saves plans, research, drafts, and final outputs into subfolders |
+The builder workflow belongs in the Skill. The public documentation explains how to install and use it without repeating its detailed internal instructions.
 
----
+## Generated workspace architecture
 
-## User Journey (Detailed)
+After the user approves a crew, the builder creates this structure:
 
-### Step 1: Installation (2 minutes)
+```text
+My-Work-Crew/
+├── .cursor/
+│   ├── agents/
+│   │   ├── riley.md
+│   │   ├── morgan.md
+│   │   └── ...
+│   ├── skills/
+│   │   └── crew-builder/
+│   │       ├── SKILL.md
+│   │       └── references/
+│   └── rules/
+│       └── crew-sop.mdc
+├── AGENTS.md
+├── STATUS.md
+├── MYCREW.md
+└── project-context/
+    ├── plans/
+    ├── research/
+    ├── drafts/
+    └── final/
+```
 
-The user downloads a `.zip` containing the `.cursor/` folder with the three core files. They open Cursor, create a workspace folder, and drag-and-drop the `.cursor` folder in. No terminal, no npm, no git.
+### Generated artifact contract
 
-### Step 2: Invoke the Builder
+| Artifact | Purpose |
+|---|---|
+| `.cursor/agents/<name>.md` | One project-level custom subagent with a focused role, clear delegation description, assigned tasks, autonomy behavior, and escalation triggers |
+| `AGENTS.md` | Shared user context, priorities, standing instructions, constraints, and crew roster |
+| `STATUS.md` | Task progress, handoffs, completed work, and questions for the user |
+| `MYCREW.md` | Plain-language crew directory, task map, and usage guide |
+| `project-context/plans/` | Strategies, roadmaps, and planning artifacts |
+| `project-context/research/` | Research notes, evidence, and analysis |
+| `project-context/drafts/` | Work in progress |
+| `project-context/final/` | Finished, user-facing deliverables |
 
-User opens Cursor chat and types: `@wcb-agent.md Hi! I'd like to build a work crew.`
+Crew members are invoked explicitly with `/name`. Cursor may also delegate to them automatically from a normal request, using each subagent's description to choose the right specialist.
 
-Nova greets the user warmly and collects:
-- Job role & title
-- Industry/company context
-- Pain points & time sinks
-- Existing tools in use
+## User journey
 
-### Step 3: Task Analysis & Approval
+1. **Install:** The user opens a dedicated folder in Cursor and copies in the complete `.cursor` folder.
+2. **Start:** The user enters `/crew-builder Build a crew for my role`.
+3. **Review:** The builder asks plain-language questions, proposes a task map and autonomy level, then presents a crew design.
+4. **Approve:** The builder previews file additions, edits, and removals and asks before changing the workspace.
+5. **Work:** The user invokes a specialist with `/name` or asks normally and lets Cursor delegate.
+6. **Modify:** The user returns to `/crew-builder` to add, remove, or change crew members, adjust autonomy, or rebuild.
 
-Nova uses the **O*NET 41 GWA Framework** to systematically map the user's role to standardized work activities. For each applicable activity, Nova generates specific, contextualized tasks and presents them grouped by category with priority indicators (🔴 Critical / 🟡 Important / 🟢 Nice-to-have).
+For a rebuild, the supported request is `/crew-builder Rebuild my crew`. Rebuild previews the proposed changes and asks for approval before modifying files. Users should not manually delete generated files because the builder must keep the agent definitions, roster, task map, and shared state consistent.
 
-The user reviews, adds/removes tasks, and approves.
+## O*NET task analysis
 
-Nova then asks for the **autonomy level**:
-- **LOW** 🟢 — Agents always ask before acting
-- **MEDIUM** 🟡 — Agents execute routine tasks independently, ask for non-routine
-- **HIGH** 🔴 — Agents work independently, escalate only when blocked
+The [O*NET Generalized Work Activities](https://www.onetonline.org/find/descriptor/browse/Work_Activities/) framework provides a common vocabulary for work across occupations. It prevents the builder from relying on an unstructured list of generic AI ideas.
 
-### Step 4: Crew Generation
+The builder uses that framework to:
 
-Nova designs the optimal crew (3-7 agents) and generates:
-- Individual agent `.md` files with full personas, tasks, skills, tools, and escalation triggers
-- `AGENTS.md` — shared memory file with user context and crew roster
-- `STATUS.md` — notification board and task tracker
-- `MYCREW.md` — complete crew summary with quick-start guide
-- `project-context/` — folder for shared knowledge and structured outputs (plans, research, drafts, final)
+1. review all 41 activities and record how each relates to the user's actual role;
+2. translate real duties into specific tasks in the user's language;
+3. classify every task as **Crew can do**, **Crew drafts—you decide**, or **Stays with you**, keeping physical, access-constrained, and human-judgment duties visible;
+4. prioritize tasks by impact and frequency; and
+5. ask the user to correct and approve the result before crew design.
 
-### Step 5: Operation
+The user's domain knowledge remains authoritative. O*NET is a structured starting point, not a substitute for the user's judgment.
 
-The user invokes any agent in a new chat: `@riley.md Please draft a weekly status report`
+## Crew design
 
-The agent:
-1. Reads `AGENTS.md` for context
-2. Reads `STATUS.md` for dependencies
-3. Scans `project-context/` for relevant documents (briefs, specs, prior work)
-4. Executes following `crew-sop.mdc` rules
-5. Saves substantial artifacts into `project-context/` (e.g. plans/, research/, drafts/, final/)
-6. Updates `STATUS.md` with results
-7. Notifies the user per autonomy level
+- Prefer the smallest crew that gives each role a distinct responsibility.
+- Assign each approved task to one owner.
+- Give every subagent a specific description so Cursor can delegate reliably.
+- Configure LOW, MEDIUM, or HIGH autonomy in terms the user can understand.
+- Make escalation triggers concrete, especially for external communication, sensitive data, financial decisions, and irreversible actions.
+- Keep generated files complete and consistent with `AGENTS.md`, `STATUS.md`, and `MYCREW.md`.
 
----
+## File-based context and coordination
 
-## Key Design Decisions
+`AGENTS.md` and `STATUS.md` preserve shared state across chats and delegated subagent runs. This makes priorities, dependencies, and decisions inspectable by the user instead of hiding them in conversation history.
 
-### Why O*NET as the Task Framework?
+`project-context/` serves a different purpose: it stores the source material and substantial artifacts used or produced by the crew. Crew members inspect only relevant folders, place new work in the matching subfolder, and link important outputs from `STATUS.md`.
 
-The O*NET (Occupational Information Network) is the US Department of Labor's comprehensive database covering 900+ occupations. Its 41 Generalized Work Activities provide a **universal taxonomy** that maps to every knowledge-worker role. This gives the WCB agent a structured, research-backed methodology rather than ad-hoc brainstorming.
+This separation keeps the workspace root readable:
 
-### Why File-Based Coordination?
+- coordination stays in `AGENTS.md` and `STATUS.md`;
+- the user guide stays in `MYCREW.md`; and
+- working knowledge and deliverables stay in `project-context/`.
 
-Cursor agents operate in isolated chat sessions — they cannot communicate directly. The file-based coordination pattern (AGENTS.md + STATUS.md) mirrors Anthropic's recommended "structured note-taking" approach and the AGENTS.md convention used by 60k+ open-source projects. It's simple, transparent, and the user can always see and edit the shared state.
+## Workspace scope
 
-### Why the Smart Zone Rule (<40% Context)?
+`crew-sop.mdc` is an always-applied Cursor rule. Its context, autonomy, notification, and file-coordination procedures therefore apply to every Agent task in the workspace, not only tasks delegated to generated crew members.
 
-Anthropic's research on context engineering confirms that LLM performance degrades as context fills — not at a hard cliff, but as a gradient. The 40% threshold ensures agents maintain peak attention quality while leaving room for conversation, tool outputs, and file contents.
+For that reason, the package is best installed in a dedicated crew workspace. Installing it in an unrelated project would also apply the SOP there.
 
-### Why Three Autonomy Levels?
+## Safety and consistency requirements
 
-The three-tier system maps to natural trust progressions: LOW for initial setup or sensitive domains, MEDIUM for most workflows once trust is established, HIGH for high-volume repetitive work. The autonomy variable permeates every aspect of the crew-sop.mdc — from notification frequency to escalation triggers to independent execution scope.
+- Preview planned file changes and receive user approval before modifying the crew.
+- Treat rebuild and removal as coordinated updates, not isolated file deletion.
+- Never overwrite user-authored context without showing what will change.
+- Keep the roster, task ownership, invocation names, and generated files synchronized.
+- Preserve existing source material and crew outputs unless the user explicitly approves their removal.
+- Use `/crew-builder` as the single lifecycle entrypoint.
 
----
+## Cursor integration
 
-## Context Engineering Best Practices Embedded
+The architecture uses two native Cursor mechanisms:
 
-| Practice | Where Implemented |
-|----------|-------------------|
-| **Smart Zone (<40% context)** | crew-sop.mdc §1.1 |
-| **External memory / note-taking** | AGENTS.md + STATUS.md + project-context/ |
-| **Structured note-taking** | STATUS.md with standardized tables |
-| **Compaction awareness** | Session management rules in crew-sop.mdc §6 |
-| **Progressive disclosure** | Agents read only relevant files per task |
-| **Role-based context filtering** | Each agent reads only its scope |
-| **Sub-agent architecture** | Each agent has a clean context per session |
-| **Graceful degradation** | Context recovery protocol in crew-sop.mdc §6.3 |
-| **Notification system** | STATUS.md notification board with emoji types |
-| **Human-in-the-loop** | Autonomy levels with escalation triggers |
+- [Agent Skills](https://cursor.com/docs/skills) for the discoverable, reusable `/crew-builder` workflow and its progressively loaded references.
+- [Subagents](https://cursor.com/docs/subagents) for project-level specialists in `.cursor/agents/`, explicit `/name` invocation, and automatic delegation.
+
+The always-applied SOP remains a rule because it must govern the whole workspace. Crew generation produces subagents, not rules.

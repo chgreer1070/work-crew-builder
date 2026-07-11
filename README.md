@@ -1,58 +1,86 @@
-# NOVA - Work Crew Builder (WCB)
+# Work Crew Builder
 
-A **zero-code, drag-and-drop system** for Cursor IDE that lets any professional — regardless of technical skill — generate a custom team of AI agent personas tailored to their specific job.
+Work Crew Builder is a zero-code way to create a small team of specialized AI helpers in Cursor. It is designed for professionals who do not write code: copy one folder, start one guided conversation, and review every proposed change before it is made.
 
-## Overview
+The builder uses the U.S. Department of Labor's O*NET Generalized Work Activities framework to turn a job into practical tasks, then groups those tasks into focused crew roles.
 
-Work Crew Builder uses the **O*NET Generalized Work Activities Framework** (41 standardized work activities across 900+ US occupations) combined with best-in-class context engineering to help you build a crew of specialized AI agents. Install in minutes, no terminal or coding required.
+## Quick start
 
-## Quick Start
+1. Create a dedicated folder for your crew and open it in [Cursor](https://cursor.com).
+2. Copy the **whole `.cursor` folder** from this repository into that workspace. See the [installation guide](INSTALL-GUIDE.md) for drag-and-drop steps.
+3. Open Cursor Agent chat and enter:
 
-1. **Install** — Copy the `.cursor` folder into your Cursor workspace (see [INSTALL-GUIDE.md](INSTALL-GUIDE.md))
-2. **Invoke** — In Cursor chat, type: `@wcb-agent.md Hi! I'd like to build a work crew.`
-3. **Follow** — Nova (your builder) will guide you through role analysis, task mapping, and crew generation
+   ```text
+   /crew-builder Build a crew for my role
+   ```
 
-## What You Get
+4. Answer the builder's questions, review its plan, and approve the files you want it to create.
 
-- Custom AI agent personas matched to your job
-- Shared crew memory (`AGENTS.md`) and task board (`STATUS.md`)
-- Operating rules aligned with Anthropic and BMAD Method practices
-- A crew summary and reference guide (`MYCREW.md`)
-- A **project-context** folder for shared knowledge and crew outputs
+Use `/crew-builder` again whenever you want to add, remove, or change a crew member, adjust autonomy, or rebuild the crew.
 
-## Project context folder
+> The supplied `crew-sop.mdc` rule is always applied across the workspace. Install this package in a dedicated crew workspace so its operating procedures do not affect unrelated projects.
 
-`project-context/` is the primary place for long-term knowledge and artifacts your crew reads and writes.
+## What the builder creates
 
-**Description:** Crew agents treat this folder as the main store for briefs, research, plans, drafts, and final deliverables. It keeps outputs organized and avoids clutter in the project root.
+Crew members are Cursor **custom subagents** stored in `.cursor/agents/<name>.md`. Ask for one directly with `/name`, or describe the work normally and let Cursor delegate to the right crew member.
 
-**Usage:**
+```text
+My-Work-Crew/
+├── .cursor/
+│   ├── agents/
+│   │   ├── riley.md
+│   │   └── ...
+│   ├── skills/
+│   │   └── crew-builder/
+│   │       ├── SKILL.md
+│   │       └── references/
+│   └── rules/
+│       └── crew-sop.mdc
+├── AGENTS.md
+├── STATUS.md
+├── MYCREW.md
+└── project-context/
+    ├── plans/
+    ├── research/
+    ├── drafts/
+    └── final/
+```
 
-- **You:** Drop any documents you want the crew to use (briefs, specs, examples) into `project-context/`. Agents will look there when tasks are relevant.
-- **Crew:** Agents save new artifacts into subfolders by type:
-  - `project-context/plans/` — Strategy and planning
-  - `project-context/research/` — Research and analysis
-  - `project-context/drafts/` — Writing and drafts
-  - `project-context/final/` — Final, user-facing outputs
+- `AGENTS.md` holds shared context, priorities, and the crew roster.
+- `STATUS.md` records progress, handoffs, and questions that need your attention.
+- `MYCREW.md` is the plain-language guide to your crew.
+- `project-context/` keeps source material and durable outputs out of the workspace root.
 
-The folder is created when you build a crew; add these subfolders as needed or let the crew create them.
+## Using project context
 
-## Repository Contents
+Put briefs, specifications, examples, and other source material in `project-context/`. Crew members check it when relevant and save substantial work by type:
 
-| File | Purpose |
-|------|---------|
-| `wcb-agent.md` | The Work Crew Builder agent persona |
-| `crew-builder.mdc` | Rules for designing and generating crews |
-| `crew-sop.mdc` | Operating procedures for all crew agents |
-| `INSTALL-GUIDE.md` | Step-by-step installation (no coding required) |
-| `wcb-project-plan.md` | Full project plan and architecture |
-| `project-context/` | Shared knowledge and crew outputs (plans, research, drafts, final) |
+- `plans/` — strategies and plans
+- `research/` — research and analysis
+- `drafts/` — work in progress
+- `final/` — finished, user-facing deliverables
 
-## Requirements
+The builder creates these folders during crew setup.
 
-- [Cursor IDE](https://cursor.com)
-- No prior coding experience needed
+## Repository contents
 
----
+| Path | Purpose |
+|---|---|
+| `.cursor/skills/crew-builder/SKILL.md` | Canonical build and modification workflow |
+| `.cursor/skills/crew-builder/references/` | O*NET, templates, and supporting builder guidance |
+| `.cursor/rules/crew-sop.mdc` | Workspace-wide operating procedures for the generated crew |
+| `README.md` | Project overview and quick start |
+| `INSTALL-GUIDE.md` | Nontechnical installation and troubleshooting |
+| `wcb-project-plan.md` | Architecture and design decisions |
+| `project-context/.gitkeep` | Keeps the repository's context folder available |
 
-*Start building: `@wcb-agent.md *help`*
+## Troubleshooting
+
+To start over, enter `/crew-builder Rebuild my crew`. Rebuild first previews the proposed changes and asks for approval before modifying files. Do not manually delete crew files.
+
+## Learn more
+
+- [Cursor Agent Skills](https://cursor.com/docs/skills)
+- [Cursor Subagents](https://cursor.com/docs/subagents)
+
+No coding, terminal, package manager, or plugin installation is required.

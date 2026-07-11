@@ -1,35 +1,46 @@
 ---
-description: Standard Operating Procedures for AI work crew agents. Always applied when any crew agent is active.
-globs: 
+description: Workspace-wide operating, coordination, and safety policy for work crews and the crew builder.
 alwaysApply: true
 ---
 
 # Crew Standard Operating Procedures (SOP)
 
-These rules govern how every agent in the work crew operates. All crew agents MUST follow these procedures.
+`alwaysApply: true` makes this policy apply workspace-wide, whether or not a
+crew custom subagent is active. Crew-specific coordination duties apply when a
+crew exists; the safety and scope rules always apply.
 
 ## 1. Context Engineering Rules
 
 ### 1.1 The Smart Zone Rule
 **CRITICAL: Stay below 40% of the context window at all times.**
 
-- Before starting any task, estimate the context you'll need
-- If a task requires reading large files, read only the relevant sections
-- Never dump entire files into context — use targeted reads
-- If you notice the conversation getting long, proactively suggest starting a new chat session
-- When approaching context limits, summarize your progress in STATUS.md before suggesting a fresh session
+- Estimate context needs, use targeted reads, and avoid loading irrelevant files.
+- When approaching the limit, summarize durable progress in `STATUS.md` only if
+  it exists and is in scope, then suggest a fresh session.
 
 ### 1.2 External Memory Protocol
 **Always use files as your memory, not the conversation context.**
 
 At the START of every task:
-1. Read `AGENTS.md` for shared context, priorities, and standing instructions
-2. Read `STATUS.md` for current task status and any pending items
+1. Read `AGENTS.md` for shared context, priorities, and standing instructions,
+   if it exists.
+2. Read `STATUS.md` for current task status and pending items, if it exists.
 3. Read any files directly relevant to your current task
 
 At the END of every task:
-1. Update `STATUS.md` with your results
-2. Update `AGENTS.md` only if there's new shared context the whole crew needs
+1. In a built crew, update `STATUS.md` with your results only when the file
+   exists and the task's file scope permits it.
+2. Update `AGENTS.md` only when it exists, the scope permits it, and there is
+   new shared context the whole crew needs.
+
+Bootstrap behavior:
+- Missing `AGENTS.md` or `STATUS.md` is expected during the initial
+  `/crew-builder` build and must not block discovery or planning. The builder
+  may create them only after the required file-mutation approval.
+- Outside a built crew, their absence simply means there is no crew memory or
+  status board. Ordinary repository maintenance must not create either file.
+- If an established crew unexpectedly lacks either file, report the gap; do not
+  silently reconstruct it.
 
 ### 1.3 Context Hygiene
 - **Do**: Reference file paths instead of copying file contents into conversation
@@ -50,6 +61,17 @@ At the END of every task:
   `project-context/`.
 
 ## 2. Autonomy Rules
+
+Read the active autonomy level from exactly one canonical declaration in
+`AGENTS.md`: ``**Active autonomy:** `<VALUE>` ``, where `<VALUE>` is LOW,
+MEDIUM, or HIGH. A built crew must contain one such declaration. If either the
+declaration or `AGENTS.md` is absent, use LOW. Multiple or invalid declarations are a
+configuration conflict: do not combine levels, and escalate for correction
+while retaining LOW constraints.
+
+The selected value chooses one of the following definitions; it does not
+replace or rewrite them.
+References below to `STATUS.md` apply only when it exists and is in scope.
 
 ### 2.1 LOW Autonomy 🟢
 
@@ -130,11 +152,23 @@ NOTIFY:
   → End-of-session summary with key decisions made
 ```
 
+### 2.4 Crew-Builder Mutation Gate
+
+Regardless of the active autonomy level, every crew-builder create, update,
+move, archive, or delete requires an exact impact preview followed by explicit
+user approval before the first mutation. Approval is limited to that preview;
+state or scope changes require a new preview and approval. Permanent deletion
+also requires explicit confirmation of the exact paths.
+
+Use `.cursor/skills/crew-builder/references/crew-modification-playbook.md` for
+the detailed modification procedure. Do not duplicate that workflow here.
+
 ## 3. Notification Protocol
 
 ### 3.1 How to Notify the Human
 
-**Immediate Notifications** (add to STATUS.md → Notifications section):
+When `STATUS.md` exists and is in the authorized file scope, add immediate
+notifications to its Notifications section:
 
 ```markdown
 | [Timestamp] | [Your Name] | [Brief message] | [Yes/No — action needed?] |
@@ -150,45 +184,48 @@ NOTIFY:
 | 🚫 Blocked | 🚫 | You cannot proceed without human intervention |
 | 📝 FYI | 📝 | Informational — no action needed |
 
-**Example Notifications:**
-
-```markdown
-| 2024-03-15 10:30 | Riley | ✅ Weekly report drafted → /docs/weekly-report-w11.md | No |
-| 2024-03-15 11:00 | Morgan | ❓ Q1 data has 3 missing entries — should I estimate or skip? | Yes |
-| 2024-03-15 14:00 | Alex | 🚫 Cannot access sales spreadsheet — permission needed | Yes |
-```
-
 ### 3.2 Clearing Notifications
 - The human clears notifications by deleting rows from the Notifications table
 - Agents should NOT clear their own notifications
-- Old notifications move to Recently Completed or are simply deleted
+- Preserve prior notifications and completed-task history unless the human
+  explicitly requests a history change
 
 ## 4. Coordination Rules
 
 ### 4.1 Agent-to-Agent Coordination
 Agents coordinate through **files only** — never through direct conversation.
 
+Modern crew personas are Cursor custom subagents stored in
+`.cursor/agents/*.md`; workspace policies belong in `.cursor/rules/*.mdc`.
+Do not treat `.cursor/rules/*.md` persona files or `@filename.md` invocation as
+the current agent model. If a legacy persona file is encountered, leave it
+unchanged and report it for an explicitly approved migration.
+
 **Shared Resources:**
-- `AGENTS.md` — Read for shared context; write only when adding crew-wide information
-- `STATUS.md` — Read for task dependencies; write your own status updates
+- `AGENTS.md` — Read when present; write only authorized crew-wide information
+- `STATUS.md` — Read when present; write authorized status updates without
+  erasing history
 
 **Task Dependencies:**
-- If your task depends on another agent's output, check STATUS.md for completion
-- If the dependency isn't met, add yourself to the Pending section with a note about what you need
-- **Never assume** another agent's work is complete without checking STATUS.md
+- If your task depends on another agent's output, check `STATUS.md` when present
+- If the dependency is unmet and the scope permits, add a Pending note
+- Never assume another agent's work is complete. If no status record is
+  available, treat completion as unknown and escalate when it blocks the task.
 
 ### 4.2 Conflict Resolution
 If two agents have conflicting information or instructions:
-1. Check AGENTS.md for the most recent standing instructions
-2. Check STATUS.md for the latest updates
-3. If still unclear, escalate to the human via STATUS.md notification
+1. Check `AGENTS.md`, when present, for the most recent standing instructions
+2. Check `STATUS.md`, when present, for the latest updates
+3. If still unclear, escalate to the human; use a `STATUS.md` notification only
+   when that file exists and is in scope
 4. **Never override** another agent's output without human approval
 
 ### 4.3 Handoff Protocol
 When one agent's output becomes another agent's input:
 1. Completing agent writes output to a clearly named file
-2. Completing agent updates STATUS.md with: task complete, output location
-3. Receiving agent reads STATUS.md, then reads the output file
+2. Completing agent records task completion and output location in `STATUS.md`
+   when it exists and is in scope
+3. Receiving agent reads available coordination state, then the output file
 4. Receiving agent begins their task with fresh context (not the completing agent's conversation)
 
 ## 5. Quality Standards
@@ -202,7 +239,7 @@ When one agent's output becomes another agent's input:
 ### 5.2 Self-Check Before Delivering:
 1. Does this output match what the human asked for?
 2. Is it formatted clearly and professionally?
-3. Have I updated STATUS.md?
+3. If a crew `STATUS.md` exists and is in scope, have I updated it?
 4. Does the autonomy level permit me to deliver this without review?
 5. Is there anything the human should know that isn't in the output itself?
 
@@ -211,22 +248,23 @@ When one agent's output becomes another agent's input:
 ### 6.1 Starting a New Session
 When a human starts a new chat and invokes you:
 1. Greet them briefly (one line, not a paragraph)
-2. Read AGENTS.md for context
-3. Read STATUS.md for current state
+2. Read `AGENTS.md` for context, if present
+3. Read `STATUS.md` for current state, if present
 4. Ask what they'd like you to work on — OR if they already specified, proceed
 
 ### 6.2 Ending a Session
 Before a session ends (or when context is getting long):
 1. Summarize what was accomplished
-2. Update STATUS.md with all progress
+2. Update `STATUS.md` with progress only when it exists and is in scope
 3. Note any open items or next steps
-4. If work is incomplete, add to STATUS.md In Progress section
+4. If work is incomplete, add it to In Progress when that section is available
 
 ### 6.3 Context Recovery
 If you're invoked but have no memory of previous work:
-1. Read AGENTS.md — this tells you who you are and what the crew is doing
-2. Read STATUS.md — this tells you what's been done and what's pending
-3. Read your own agent .md file if you need to remember your tasks and scope
+1. Read `AGENTS.md`, if present, for shared crew context
+2. Read `STATUS.md`, if present, for completed and pending work
+3. If you are a custom subagent, read your `.cursor/agents/<name>.md`
+   definition when needed to recover tasks and scope
 4. Proceed naturally — the human doesn't need to re-explain everything
 
 ## 7. Safety & Boundaries
