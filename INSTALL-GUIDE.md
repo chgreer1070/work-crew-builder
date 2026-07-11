@@ -1,105 +1,148 @@
-# 📦 Work Crew Builder — Installation Guide
+# Work Crew Builder installation guide
 
-> **No coding experience needed!** Follow these simple steps to set up your AI work crew.
+No coding experience is needed. Installation is a folder copy, and the builder guides you in plain language.
 
----
+## Before you begin
 
-## What You'll Need
+You need:
 
-1. **Cursor IDE** installed on your computer
-   - Download from [cursor.com](https://cursor.com) if you don't have it
-   - It's free to start (Pro plan recommended for heavy use)
+- [Cursor](https://cursor.com) installed on your computer
+- the downloaded Work Crew Builder repository
+- a new or dedicated folder for your crew
 
-2. **The Work Crew Builder files** (the folder you downloaded)
+The supplied `crew-sop.mdc` rule is always applied throughout the workspace where it is installed. A dedicated crew workspace prevents those operating procedures from affecting unrelated work.
 
----
+## What you will copy
 
-## Installation Steps
+Copy the **whole `.cursor` folder**, including its subfolders:
 
-### Step 1: Open Cursor
-
-Launch the Cursor application on your computer.
-
-### Step 2: Create or Open a Workspace
-
-- Click **File → Open Folder**
-- Create a new empty folder anywhere on your computer (e.g., `My-Work-Crew`)
-- Select that folder — this becomes your **workspace**
-
-### Step 3: Add the WCB Files
-
-**Option A — Drag and Drop (Easiest):**
-1. Open the WCB download folder in your file explorer
-2. You'll see a `.cursor` folder and some files
-3. **Drag the entire `.cursor` folder** into your workspace in Cursor's sidebar
-4. That's it! The files are in the right place.
-
-**Option B — Manual Copy:**
-1. Copy the `.cursor` folder from the download into your workspace folder
-2. Make sure the structure looks like this:
-
+```text
+.cursor/
+├── skills/
+│   └── crew-builder/
+│       ├── SKILL.md
+│       └── references/
+└── rules/
+    └── crew-sop.mdc
 ```
+
+Do not copy only `SKILL.md`. The skill uses the material in `references/`, and the crew relies on the workspace-wide SOP.
+
+## Install in four steps
+
+### 1. Create a crew workspace
+
+1. Open Cursor.
+2. Choose **File → Open Folder**.
+3. Create and open a new folder, such as `My-Work-Crew`.
+
+### 2. Copy the package
+
+1. Open the Work Crew Builder download in your computer's file explorer.
+2. Drag the entire `.cursor` folder into the top level of `My-Work-Crew`.
+3. If your computer hides folders whose names begin with a dot, turn on **Show hidden files** first.
+
+The result should include:
+
+```text
+My-Work-Crew/
+└── .cursor/
+    ├── skills/
+    │   └── crew-builder/
+    │       ├── SKILL.md
+    │       └── references/
+    └── rules/
+        └── crew-sop.mdc
+```
+
+### 3. Start the builder
+
+Open Cursor Agent chat and enter:
+
+```text
+/crew-builder Build a crew for my role
+```
+
+The builder asks about your work, reviews all 41 O*NET Generalized Work Activities, and classifies each real task as **Crew can do**, **Crew drafts—you decide**, or **Stays with you**. Human-owned duties remain visible. The builder then helps you choose how independently the crew may act and shows the proposed crew and file changes before asking permission to create them.
+
+### 4. Review the result
+
+After approval, your workspace should look like this:
+
+```text
 My-Work-Crew/
 ├── .cursor/
+│   ├── agents/
+│   │   ├── riley.md
+│   │   ├── morgan.md
+│   │   └── ...
+│   ├── skills/
+│   │   └── crew-builder/
+│   │       ├── SKILL.md
+│   │       └── references/
 │   └── rules/
-│       ├── wcb-agent.md
-│       ├── crew-builder.mdc
 │       └── crew-sop.mdc
+├── AGENTS.md
+├── STATUS.md
+├── MYCREW.md
+└── project-context/
+    ├── plans/
+    ├── research/
+    ├── drafts/
+    └── final/
 ```
 
-### Step 4: Start Building Your Crew!
+All four standard `project-context/` subfolders are required. Crew member names will be chosen for your role, and each managed crew member has a custom-subagent file in `.cursor/agents/`. Existing custom subagents that are not listed in the `AGENTS.md` roster remain outside the managed crew and are left untouched.
 
-1. In Cursor, open the **Chat panel** (click the chat icon on the right sidebar, or press `Cmd+L` / `Ctrl+L`)
-2. In the chat input, type:
+## Work with your crew
 
-```
-@wcb-agent.md Hi! I'd like to build a work crew for my role.
-```
-
-3. Nova (your Work Crew Builder) will greet you and ask about your job
-4. Follow the conversation — Nova will guide you through everything!
-
----
-
-## What Happens Next
-
-Nova will:
-1. 🔍 Ask about your role and work context
-2. 📋 Research and present tasks specific to your job
-3. 🎚️ Ask how much freedom you want your crew to have
-4. 🏗️ Build your custom crew of AI agents
-5. 📄 Create all the files and give you a summary
-
-After setup, you'll have a team of specialized AI agents you can chat with anytime!
-
----
+- Invoke a crew member directly: `/riley Draft this week's status update`.
+- Or describe the task normally and let Cursor delegate it to the appropriate subagent.
+- Put useful briefs, examples, and source documents in `project-context/`.
+- Check `STATUS.md`, the source of truth for ordinary task and event state, for progress and questions.
+- Use `/crew-builder` for durable changes to context, priorities, standing instructions, tasks, roster, or autonomy. The builder reconciles those changes across `AGENTS.md` and the related crew files.
 
 ## Troubleshooting
 
-**"I don't see the chat panel"**
-→ Press `Cmd+L` (Mac) or `Ctrl+L` (Windows) to open it
+### `/crew-builder` does not appear
 
-**"The agent doesn't respond"**
-→ Make sure you typed `@wcb-agent.md` (with the @ symbol and the file extension)
-→ The file must be in `.cursor/rules/` folder
+- Confirm the file is at `.cursor/skills/crew-builder/SKILL.md`, with no extra folder level.
+- Confirm `SKILL.md` begins with valid YAML frontmatter containing `name: crew-builder` and a non-empty `description`.
+- Reload the workspace window, or close and reopen the folder, so Cursor discovers the Skill again. Then start a new Agent chat and type `/crew-builder`.
 
-**"I want to start over"**
-→ Delete the generated agent files and STATUS.md, AGENTS.md, MYCREW.md
-→ Start a new chat with `@wcb-agent.md *rebuild`
+A missing `references/` folder affects execution after invocation; it does not determine whether `/crew-builder` appears in the slash-command list. If the command appears but cannot complete its workflow, confirm the whole `references/` folder was copied.
 
----
+### A crew member does not appear
 
-## File Reference
+- Check that its file is under `.cursor/agents/`.
+- Start a new Agent chat after the crew was created.
+- Ask naturally for that subagent, or invoke it with `/name`.
 
-| File | What It Does |
-|------|-------------|
-| `wcb-agent.md` | The crew builder agent — your setup assistant |
-| `crew-builder.mdc` | Rules for how crews are built (you don't need to edit this) |
-| `crew-sop.mdc` | Rules your crew follows (you don't need to edit this) |
-| `AGENTS.md` | Your crew's shared knowledge — **edit this to update priorities** |
-| `STATUS.md` | Task status board — **check this for updates from your crew** |
-| `MYCREW.md` | Your crew summary — **your reference guide** |
+### I want to start over
 
----
+Enter:
 
-*Questions? Start a chat with `@wcb-agent.md *help`*
+```text
+/crew-builder Rebuild my crew
+```
+
+Rebuild previews every proposed change and asks for approval before modifying files. Do not manually delete generated files; the builder keeps the crew roster and shared documents consistent.
+
+### The crew rules affect unrelated work
+
+The SOP is intentionally workspace-wide. After a crew exists, do not move only the installed package or `.cursor/` folder. Move or open the entire dedicated crew workspace as one unit, including `.cursor/`, `AGENTS.md`, `STATUS.md`, `MYCREW.md`, and `project-context/`. This keeps crew configuration, task history, and outputs together.
+
+## File reference
+
+| Path | Purpose |
+|---|---|
+| `.cursor/skills/crew-builder/SKILL.md` | Guided entrypoint for building and changing a crew |
+| `.cursor/skills/crew-builder/references/` | O*NET and file-generation guidance used by the skill |
+| `.cursor/rules/crew-sop.mdc` | Always-applied operating procedures for this workspace |
+| `.cursor/agents/<name>.md` | Generated custom subagent definitions |
+| `AGENTS.md` | Shared context, priorities, and crew roster |
+| `STATUS.md` | Progress, handoffs, and questions |
+| `MYCREW.md` | Plain-language crew guide |
+| `project-context/` | Source material and durable crew outputs |
+
+For Cursor terminology and behavior, see [Agent Skills](https://cursor.com/docs/skills) and [Subagents](https://cursor.com/docs/subagents).
